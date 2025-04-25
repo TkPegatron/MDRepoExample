@@ -21,19 +21,15 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y pandoc
-        pip install weasyprint
+        pip install weasyprint pygments
 
     - name: Prepare templates and filters
       run: |
-        # Syntax highlighting CSS (GitHub theme)
-        echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">' > header.html
-        echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>' >> header.html
-        echo '<script>hljs.highlightAll();</script>' >> header.html
+        # Generate Pygments CSS (GitHub-like theme)
+        pygmentize -S github -f html -a .highlight > pygments.css
         
         # GitHub alerts CSS
-        #? I dont like how the AI did this but okay
-        # EX: `echo '.markdown-alert-title { font-weight: 600; margin-bottom: 4px; }' >> header.html`
-        echo '<style>' >> header.html
+        echo '<style>' > header.html
         echo '.markdown-alert { padding: 0.5rem 1rem; margin: 1rem 0; border-left: 4px solid; border-radius: 4px; }' >> header.html
         echo '.markdown-alert-title { font-weight: 600; margin-bottom: 4px; }' >> header.html
         echo '.markdown-alert.note { border-color: #0969da; background-color: #ddf4ff; }' >> header.html
@@ -43,7 +39,8 @@ jobs:
         echo '.markdown-alert.caution { border-color: #cf222e; background-color: #ffebe9; }' >> header.html
         echo '</style>' >> header.html
         
-        # Add GitHub Markdown CSS
+        # Add Pygments CSS and GitHub Markdown CSS
+        cat pygments.css >> header.html
         echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">' >> header.html
         echo '<style>.markdown-body { box-sizing: border-box; min-width: 200px; max-width: 980px; margin: 0 auto; padding: 45px; } @media (max-width: 767px) { .markdown-body { padding: 15px; } }</style>' >> header.html
         
@@ -72,7 +69,7 @@ jobs:
             pandoc --standalone \
                     -H header.html \
                     --lua-filter=alerts.lua \
-                    --highlight-style=github \
+                    --highlight-style=pygments \
                     --metadata pagetitle="$(basename "$file" .md)" \
                     -o "$output_html" "$file"
           done
@@ -83,7 +80,7 @@ jobs:
         find . -name '*.html' -exec sh -c '
           for file; do
             output_pdf="${file%.html}.pdf"
-            weasyprint --stylesheet https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css "$file" "$output_pdf"
+            weasyprint --stylesheet pygments.css "$file" "$output_pdf"
           done
         ' sh {} +
 
