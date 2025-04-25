@@ -1,0 +1,96 @@
+name: Convert Markdown to HTML and PDF
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x' #! <<-- Look into this
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+        pip install weasyprint
+
+    - name: Prepare templates and filters
+      run: |
+        # Syntax highlighting CSS (GitHub theme)
+        echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">' > header.html
+        echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>' >> header.html
+        echo '<script>hljs.highlightAll();</script>' >> header.html
+        
+        # GitHub alerts CSS
+        #? I dont like how the AI did this but okay
+        # EX: `echo '.markdown-alert-title { font-weight: 600; margin-bottom: 4px; }' >> header.html`
+        echo '<style>' >> header.html
+        echo '.markdown-alert { padding: 0.5rem 1rem; margin: 1rem 0; border-left: 4px solid; border-radius: 4px; }' >> header.html
+        echo '.markdown-alert-title { font-weight: 600; margin-bottom: 4px; }' >> header.html
+        echo '.markdown-alert.note { border-color: #0969da; background-color: #ddf4ff; }' >> header.html
+        echo '.markdown-alert.tip { border-color: #1a7f37; background-color: #dafbe1; }' >> header.html
+        echo '.markdown-alert.warning { border-color: #9a6700; background-color: #fff8c5; }' >> header.html
+        echo '.markdown-alert.important { border-color: #8250df; background-color: #fbefff; }' >> header.html
+        echo '.markdown-alert.caution { border-color: #cf222e; background-color: #ffebe9; }' >> header.html
+        echo '</style>' >> header.html
+        
+        # Add GitHub Markdown CSS
+        echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">' >> header.html
+        echo '<style>.markdown-body { box-sizing: border-box; min-width: 200px; max-width: 980px; margin: 0 auto; padding: 45px; } @media (max-width: 767px) { .markdown-body { padding: 15px; } }</style>' >> header.html
+        
+        # Create Lua filter for GitHub alerts
+        echo 'function BlockQuote(el)
+          if #el.content == 1 and el.content[1].t == "Para" then
+            local text = pandoc.utils.stringify(el.content[1])
+            local alert_type, title = text:match("%[%!(%u+)%]%s+(.*)")
+            if alert_type then
+              alert_type = alert_type:lower()
+              local div = pandoc.Div({}, {class = "markdown-alert " .. alert_type})
+              div.content:extend({
+                pandoc.Div({pandoc.Str(title)}, {class = "markdown-alert-title"}),
+                pandoc.Div(el.content[1].content)
+              })
+              return div
+            end
+          end
+        end' > alerts.lua
+
+    - name: Convert Markdown to HTML
+      run: |
+        find . -name '*.md' -exec sh -c '
+          for file; do
+            output_html="${file%.md}.html"
+            pandoc --standalone \
+                    -H header.html \
+                    --lua-filter=alerts.lua \
+                    --highlight-style=github \
+                    --metadata pagetitle="$(basename "$file" .md)" \
+                    -o "$output_html" "$file"
+          done
+        ' sh {} +
+
+    - name: Convert HTML to PDF
+      run: |
+        find . -name '*.html' -exec sh -c '
+          for file; do
+            output_pdf="${file%.html}.pdf"
+            weasyprint --stylesheet https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css "$file" "$output_pdf"
+          done
+        ' sh {} +
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: converted-docs
+        path: |
+          **/*.html
+          **/*.pdf
