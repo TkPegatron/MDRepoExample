@@ -25,14 +25,20 @@ jobs:
 
     - name: Prepare styles
       run: |
-        # Generate Pygments CSS (GitHub-like theme)
+        # Generate Pygments CSS
         pygmentize -S github-dark -f html -a .highlight > styles.css
         
-        # Create header with combined styles
+        # Create header with wider layout
         echo '<meta name="viewport" content="width=device-width, initial-scale=1">' > header.html
         echo '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">' >> header.html
         echo '<style>' >> header.html
-        echo '.markdown-body { box-sizing: border-box; min-width: 200px; max-width: 980px; margin: 0 auto; padding: 45px; }' >> header.html
+        echo '.markdown-body {' >> header.html
+        echo '  box-sizing: border-box;' >> header.html
+        echo '  min-width: 200px;' >> header.html
+        echo '  max-width: 1200px;'  # Increased from 980px >> header.html
+        echo '  margin: 0 auto;' >> header.html
+        echo '  padding: 20px;'  # Reduced from 45px >> header.html
+        echo '}' >> header.html
         echo '@media (max-width: 767px) { .markdown-body { padding: 15px; } }' >> header.html
         echo '</style>' >> header.html
         cat styles.css >> header.html
