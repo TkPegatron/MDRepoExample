@@ -26,7 +26,7 @@ jobs:
     - name: Prepare templates and filters
       run: |
         # Generate Pygments CSS (GitHub-like theme)
-        pygmentize -S github -f html -a .highlight > pygments.css
+        pygmentize -S github-dark -f html -a .highlight > pygments.css
         
         # GitHub alerts CSS
         echo '<style>' > header.html
