@@ -34,8 +34,7 @@ jobs:
         echo '<style>' >> header.html
         echo '.markdown-body {' >> header.html
         echo '  box-sizing: border-box;' >> header.html
-        echo '  min-width: 200px;' >> header.html
-        echo '  max-width: 1200px;'  # Increased from 980px >> header.html
+        echo '  width: 90%;' >> header.html
         echo '  margin: 0 auto;' >> header.html
         echo '  padding: 20px;'  # Reduced from 45px >> header.html
         echo '}' >> header.html
