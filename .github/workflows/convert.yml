@@ -37,7 +37,7 @@ jobs:
         cd docs && zip -r ../technical-notes.zip ./*
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: technical-notes
         path: technical-notes.zip
