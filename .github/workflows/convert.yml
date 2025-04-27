@@ -21,16 +21,23 @@ jobs:
 
     - name: Convert to HTML
       run: |
-        pandoc readme.md -o docs/readme.html \
-        --standalone --self-contained \
-        --css=assets/css/github.css \
-        --metadata title="Technical Notes"
+        find . -name '*.md' -exec sh -c '
+          for file; do
+            pandoc "$file" -o "$output_html" \
+            --standalone --self-contained \
+            --css=assets/css/github.css
+          done
+        ' sh {} +
 
-    - name: Convert to PDF
-      run: |
-        pandoc readme.md -o docs/readme.pdf \
-        --pdf-engine=xelatex \
-        --highlight-style=tango
+    #- name: Convert to PDF
+    #  run: |
+    #    find . -name '*.md' -exec sh -c '
+    #      for file; do
+    #          pandoc readme.md -o docs/readme.pdf \
+    #          --pdf-engine=xelatex \
+    #          --highlight-style=tango
+    #      done
+    #    ' sh {} +
 
     - name: Create ZIP archive
       run: |
@@ -41,3 +48,23 @@ jobs:
       with:
         name: technical-notes
         path: technical-notes.zip
+
+
+    # Optional cloud storage upload examples:
+    #- name: AWS S3 Upload
+    #  if: ${{ false }}  # Set to true and configure credentials to enable
+    #  uses: aws-actions/configure-aws-credentials@v2
+    #  with:
+    #    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+    #    aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+    #    aws-region: us-east-1
+
+    #- name: Upload to S3
+    #  if: ${{ false }}
+    #  run: aws s3 cp technical-notes.zip s3://your-bucket/path/
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs
