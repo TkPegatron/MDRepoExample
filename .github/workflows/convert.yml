@@ -24,8 +24,8 @@ jobs:
         find . -name '*.md' -exec sh -c '
           for file; do
             pandoc "$file" -o "$output_html" \
-            --standalone --self-contained \
-            --css=assets/css/github.css
+            --embed-resources --standalone
+            #--css=assets/css/github.css
           done
         ' sh {} +
 
