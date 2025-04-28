@@ -27,9 +27,8 @@ jobs:
           find . -name '*.md' -exec sh -c '
             for file; do
               output_html="${file%.md}.html"
-              pandoc "$file" -o "docs/$output_html" \
-                --embed-resources --standalone \
-                --css=https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css
+              pandoc "$file" f gfm+alerts -o "docs/$output_html" \
+                --embed-resources --standalone --defaults .github/dracula.yaml
             done
           ' sh {} +
 
