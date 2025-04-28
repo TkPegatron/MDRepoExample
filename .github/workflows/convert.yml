@@ -13,27 +13,24 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y pandoc zip
 
-    - name: Create output directory
-      run: mkdir -p docs/assets
-
-    - name: Copy assets
-      run: cp -R css images docs/assets/ || true  # Ignore if no assets
-
-    #- uses: xu-cheng/texlive-action@v2
-    #  with:
-    #    scheme: full
-    #    run: |
+    - name: Create output directory and copy assets
+      run: |
+        mkdir -p docs/assets
+        cp -vR css images docs/assets/ || true  # Ignore if no assets
 
     - name: Convert to HTML
-      run: |
-        find . -name '*.md' -exec sh -c '
-          for file; do
-            output_html="${file%.md}.html"
-            pandoc "$file" -o "docs/$output_html" \
-              --embed-resources --standalone
-              #--css=assets/css/github.css
-          done
-        ' sh {} +
+      uses: xu-cheng/texlive-action@v2
+      with:
+        scheme: full
+        run: |
+          find . -name '*.md' -exec sh -c '
+            for file; do
+              output_html="${file%.md}.html"
+              pandoc "$file" -o "docs/$output_html" \
+                --embed-resources --standalone \
+                --css=https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css
+            done
+          ' sh {} +
 
     #- name: Convert to PDF
     #  run: |
