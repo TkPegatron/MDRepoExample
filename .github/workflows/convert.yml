@@ -11,13 +11,18 @@ jobs:
     - name: Setup dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y pandoc texlive-full zip
+        sudo apt-get install -y pandoc zip
 
     - name: Create output directory
       run: mkdir -p docs/assets
 
     - name: Copy assets
       run: cp -R css images docs/assets/ || true  # Ignore if no assets
+
+    #- uses: xu-cheng/texlive-action@v2
+    #  with:
+    #    scheme: full
+    #    run: |
 
     - name: Convert to HTML
       run: |
@@ -64,8 +69,8 @@ jobs:
     #  if: ${{ false }}
     #  run: aws s3 cp technical-notes.zip s3://your-bucket/path/
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs
+    #- name: Deploy to GitHub Pages
+    #  uses: peaceiris/actions-gh-pages@v3
+    #  with:
+    #    github_token: ${{ secrets.GITHUB_TOKEN }}
+    #    publish_dir: ./docs
