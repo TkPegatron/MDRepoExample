@@ -11,7 +11,7 @@ jobs:
     - name: Setup dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y pandoc zip
+        sudo apt-get install -y zip
 
     - name: Create output directory and copy assets
       run: |
@@ -23,6 +23,7 @@ jobs:
       with:
         scheme: full
         run: |
+          apk add pandoc
           find . -name '*.md' -exec sh -c '
             for file; do
               output_html="${file%.md}.html"
